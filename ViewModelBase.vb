@@ -55,6 +55,10 @@ Public Class ViewModelBase
     Private Delegate Sub RefreshCommandsSyncHandler()
 
     Public Overridable Sub Initialize()
+        OnInitialize()
+    End Sub
+
+    Protected Overridable Sub OnInitialize()
     End Sub
 
     Public Sub RefreshCommands()
