@@ -217,7 +217,7 @@ Public Class ViewModelBase
         End If
     End Sub
 
-    Protected Shared Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
+    Protected Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
         If expression Is Nothing Then
             Throw New ArgumentNullException("expression")
         End If
