@@ -79,8 +79,9 @@ Public Class ViewModelBase
     Public Event PropertyChanging(sender As Object, e As System.ComponentModel.PropertyChangingEventArgs) Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
     Public Event PropertyChanged(sender As Object, e As System.ComponentModel.PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
 
-    Private Delegate Sub PropertyChangeDelegate(propertyName As String)
+#Region "Obsolete UpdateProperty methods"
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Object, newValue As Object)
         If backingFieldValue IsNot Nothing AndAlso backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -88,6 +89,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As String, newValue As String)
         If Not String.IsNullOrEmpty(backingFieldValue) AndAlso backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -95,6 +97,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Double, newValue As Double)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -102,6 +105,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Single, newValue As Single)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -109,6 +113,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Long, newValue As Long)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -116,6 +121,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As ULong, newValue As ULong)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -123,6 +129,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Integer, newValue As Integer)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -130,6 +137,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UInteger, newValue As UInteger)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -137,6 +145,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Short, newValue As Short)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -144,6 +153,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UShort, newValue As UShort)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -151,6 +161,7 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
+    <Obsolete("Use SetProperty")>
     Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Boolean, newValue As Boolean)
         If backingFieldValue.Equals(newValue) Then Return
         OnPropertyChanging(propertyName)
@@ -158,7 +169,9 @@ Public Class ViewModelBase
         OnPropertyChanged(propertyName)
     End Sub
 
-#Region "New Lamba way"
+#End Region
+
+#Region "New Lamba SetProperty"
 
     Protected Sub SetProperty(Of T)(expression As Expression(Of Func(Of T)), ByRef field As T, value As T)
         If field IsNot Nothing AndAlso field.Equals(value) Then Return
@@ -204,10 +217,24 @@ Public Class ViewModelBase
         End If
     End Sub
 
-    Protected Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
-        Dim memberExp = DirectCast(expression.Body, MemberExpression)
-        Return memberExp.Member.Name
+    Protected Shared Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
+        If expression Is Nothing Then
+            Throw New ArgumentNullException("expression")
+        End If
+
+        Dim body = expression.Body
+        Dim memberExpression As MemberExpression = TryCast(body, MemberExpression)
+        If memberExpression Is Nothing Then
+            memberExpression = DirectCast(DirectCast(body, UnaryExpression).Operand, MemberExpression)
+        End If
+        Return memberExpression.Member.Name
     End Function
+
+    'Original version, see more robust revision above.
+    'Protected Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
+    '    Dim memberExp = DirectCast(expression.Body, MemberExpression)
+    '    Return memberExp.Member.Name
+    'End Function
 
     Protected Sub OnPropertyChangingAndChanged(Of T)(expression As Expression(Of Func(Of T)))
         Dim PropertyName = GetPropertyName(expression)
@@ -215,7 +242,39 @@ Public Class ViewModelBase
         OnPropertyChanged(PropertyName)
     End Sub
 
+    Private propertyValueMap As New Dictionary(Of String, Object)
+
+    Protected Function [Get](Of T)(path As Expression(Of Func(Of T))) As T
+        Return [Get](path, Nothing)
+    End Function
+
+    Protected Overridable Function [Get](Of T)(path As Expression(Of Func(Of T)), defaultValue As T) As T
+        Dim propertyName = GetPropertyName(path)
+        If propertyValueMap.ContainsKey(propertyName) Then
+            Return DirectCast(propertyValueMap(propertyName), T)
+        Else
+            propertyValueMap.Add(propertyName, defaultValue)
+            Return defaultValue
+        End If
+    End Function
+
+    Protected Sub [Set](Of T)(path As Expression(Of Func(Of T)), value As T)
+        [Set](path, value, False)
+    End Sub
+
+    Protected Overridable Sub [Set](Of T)(path As Expression(Of Func(Of T)), value As T, forceUpdate As Boolean)
+        Dim oldValue = [Get](path)
+        Dim propertyName = GetPropertyName(path)
+
+        If Not Object.Equals(value, oldValue) OrElse forceUpdate Then
+            propertyValueMap(propertyName) = value
+            OnPropertyChanged(path)
+        End If
+    End Sub
+
 #End Region
+
+    Private Delegate Sub PropertyChangeDelegate(propertyName As String)
 
     Protected Overridable Sub OnPropertyChanging(propertyName As String)
 #If DEBUG Then
