@@ -242,36 +242,6 @@ Public Class ViewModelBase
         OnPropertyChanged(PropertyName)
     End Sub
 
-    Private propertyValueMap As New Dictionary(Of String, Object)
-
-    Protected Function [Get](Of T)(path As Expression(Of Func(Of T))) As T
-        Return [Get](path, Nothing)
-    End Function
-
-    Protected Overridable Function [Get](Of T)(path As Expression(Of Func(Of T)), defaultValue As T) As T
-        Dim propertyName = GetPropertyName(path)
-        If propertyValueMap.ContainsKey(propertyName) Then
-            Return DirectCast(propertyValueMap(propertyName), T)
-        Else
-            propertyValueMap.Add(propertyName, defaultValue)
-            Return defaultValue
-        End If
-    End Function
-
-    Protected Sub [Set](Of T)(path As Expression(Of Func(Of T)), value As T)
-        [Set](path, value, False)
-    End Sub
-
-    Protected Overridable Sub [Set](Of T)(path As Expression(Of Func(Of T)), value As T, forceUpdate As Boolean)
-        Dim oldValue = [Get](path)
-        Dim propertyName = GetPropertyName(path)
-
-        If Not Object.Equals(value, oldValue) OrElse forceUpdate Then
-            propertyValueMap(propertyName) = value
-            OnPropertyChanged(path)
-        End If
-    End Sub
-
 #End Region
 
     Private Delegate Sub PropertyChangeDelegate(propertyName As String)
