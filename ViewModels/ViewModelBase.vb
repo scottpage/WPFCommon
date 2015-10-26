@@ -181,7 +181,7 @@ Public Class ViewModelBase
         OnPropertyChanged(Me, expression, oldValue, value)
     End Sub
 
-    Protected Sub OnPropertyChanging(Of T)(expression As Expression(Of Func(Of T)))
+    Protected Overridable Sub OnPropertyChanging(Of T)(expression As Expression(Of Func(Of T)))
         Dim PropertyName = GetPropertyName(expression)
         OnPropertyChanging(PropertyName)
     End Sub
@@ -199,7 +199,7 @@ Public Class ViewModelBase
         End If
     End Sub
 
-    Protected Sub OnPropertyChanged(Of T)(expression As Expression(Of Func(Of T)))
+    Protected Overridable Sub OnPropertyChanged(Of T)(expression As Expression(Of Func(Of T)))
         Dim PropertyName = GetPropertyName(expression)
         OnPropertyChanged(PropertyName)
     End Sub
@@ -246,7 +246,7 @@ Public Class ViewModelBase
 
     Private Delegate Sub PropertyChangeDelegate(propertyName As String)
 
-    Protected Overridable Sub OnPropertyChanging(propertyName As String)
+    Private Sub OnPropertyChanging(propertyName As String)
 #If DEBUG Then
 #If VALIDATEPROPERTYNAMES Then
         ValidatePropertyName(propertyName)
@@ -260,7 +260,7 @@ Public Class ViewModelBase
         End If
     End Sub
 
-    Protected Overridable Sub OnPropertyChanged(propertyName As String)
+    Private Sub OnPropertyChanged(propertyName As String)
 #If DEBUG Then
 #If VALIDATEPROPERTYNAMES Then
         ValidatePropertyName(propertyName)
