@@ -95,6 +95,9 @@ Public NotInheritable Class RelayCommand
 
     End Sub
 
+    ''' <summary>
+    ''' Raises the <see cref="CanExecuteChanged" /> event.  Call this method to notify the UI that this commands <see cref="CanExecute(Object)"/> status has changed. />
+    ''' </summary>
     Public Sub InvalidRequerySuggested()
         RaiseEvent CanExecuteChanged(Me, EventArgs.Empty)
     End Sub
