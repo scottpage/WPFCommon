@@ -1,17 +1,64 @@
-﻿Imports System.ComponentModel
+﻿Imports System
+Imports System.Collections.ObjectModel
+Imports System.ComponentModel
 
 ''' <summary>
-''' A base class for implementing a MVVM style in WPF.
+''' Base View Model class for implementing MVVM in WPF.
 ''' </summary>
 ''' <remarks></remarks>
 Public Class ViewModelBase
     Implements INotifyPropertyChanging
     Implements INotifyPropertyChanged
 
+    Private Shared ReadOnly _ViewModels As New ObservableCollection(Of ViewModelBase)
+    Private Shared _AllViewModelsAreShutdown As Boolean = False
+
+    Public ReadOnly Property ApplicationTitle As String
+        Get
+            Return My.Application.Info.Title
+        End Get
+    End Property
+
+    Public Shared ReadOnly Property ViewModels As IEnumerable(Of ViewModelBase)
+        Get
+            Return _ViewModels.AsEnumerable
+        End Get
+    End Property
+
+    Private Shared Sub AddViewModel(vm As ViewModelBase)
+        If _AllViewModelsAreShutdown Then
+            Throw New InvalidOperationException("The view models are shutdown and can no longer be used.")
+            Return
+        End If
+        SyncLock _ViewModelsLockObj
+            _ViewModels.Add(vm)
+        End SyncLock
+    End Sub
+
+    Private Shared Sub RemoveViewModel(vm As ViewModelBase)
+        SyncLock _ViewModelsLockObj
+            _ViewModels.Remove(vm)
+        End SyncLock
+    End Sub
+
+    Private Shared ReadOnly _ViewModelsLockObj As New Object
+    Private Shared Sub ShutdownViewModels()
+        SyncLock _ViewModelsLockObj
+            If _AllViewModelsAreShutdown Then Return
+            For Each VM In _ViewModels.ToList
+                VM.Shutdown()
+                _ViewModels.Remove(VM)
+            Next
+            _ViewModels.Clear()
+            _AllViewModelsAreShutdown = True
+        End SyncLock
+    End Sub
+
 #Region "Constructors"
 
     Protected Sub New()
-        _CreatorDispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher
+        _CreatorDispatcher = Dispatcher.CurrentDispatcher
+        AddViewModel(Me)
     End Sub
 
 #End Region
@@ -23,6 +70,13 @@ Public Class ViewModelBase
     Protected ReadOnly Property CreatorDispatcher As Dispatcher
         Get
             Return _CreatorDispatcher
+        End Get
+    End Property
+
+    Private _IsShutdown As Boolean
+    Public ReadOnly Property IsShutdown As Boolean
+        Get
+            Return _IsShutdown
         End Get
     End Property
 
@@ -55,10 +109,10 @@ Public Class ViewModelBase
     Private Delegate Sub RefreshCommandsSyncHandler()
 
     Public Overridable Sub Initialize()
-        OnInitialize()
+        OnInitialized()
     End Sub
 
-    Protected Overridable Sub OnInitialize()
+    Protected Overridable Sub OnInitialized()
     End Sub
 
     Public Sub RefreshCommands()
@@ -70,6 +124,14 @@ Public Class ViewModelBase
     End Sub
 
     Public Overridable Sub Reset()
+    End Sub
+
+    Private Sub Shutdown()
+        SetProperty(Function() IsShutdown, _IsShutdown, True)
+        OnShutdown()
+    End Sub
+
+    Protected Overridable Sub OnShutdown()
     End Sub
 
 #End Region

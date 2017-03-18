@@ -1,4 +1,4 @@
-﻿Public Class MouseUtils
+﻿Public Class DragDropUtils
     Inherits DependencyObject
 
 
@@ -15,9 +15,9 @@
 
     Public Shared ReadOnly DragProperty As DependencyProperty = DependencyProperty.RegisterAttached("Drag",
                                                         GetType(Boolean),
-                                                        GetType(MouseUtils),
+                                                        GetType(DragDropUtils),
                                                         New FrameworkPropertyMetadata(False,
-                                                        New PropertyChangedCallback(AddressOf MouseUtils.OnDragPropertyChanged)))
+                                                        New PropertyChangedCallback(AddressOf OnDragPropertyChanged)))
 
     Public Shared Function GetDrag(ByVal element As DependencyObject) As Boolean
         If Not TypeOf element Is FrameworkElement OrElse element Is Nothing Then Throw New ArgumentException("Drag cannot be used with an element of this type.", "element")

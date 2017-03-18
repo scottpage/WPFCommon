@@ -83,7 +83,7 @@
     <Import Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Behaviors\MouseUtils.vb" />
+    <Compile Include="Behaviors\DragDropUtils.vb" />
     <Compile Include="ViewModels\PropertyChangingExtendedEventArgs.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
