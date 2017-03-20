@@ -141,97 +141,97 @@ Public Class ViewModelBase
     Public Event PropertyChanging(sender As Object, e As System.ComponentModel.PropertyChangingEventArgs) Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
     Public Event PropertyChanged(sender As Object, e As System.ComponentModel.PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
 
-#Region "Obsolete UpdateProperty methods"
+    '#Region "Obsolete UpdateProperty methods"
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Object, newValue As Object)
-        If backingFieldValue IsNot Nothing AndAlso backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Object, newValue As Object)
+    '        If backingFieldValue IsNot Nothing AndAlso backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As String, newValue As String)
-        If Not String.IsNullOrEmpty(backingFieldValue) AndAlso backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As String, newValue As String)
+    '        If Not String.IsNullOrEmpty(backingFieldValue) AndAlso backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Double, newValue As Double)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Double, newValue As Double)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Single, newValue As Single)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Single, newValue As Single)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Long, newValue As Long)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Long, newValue As Long)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As ULong, newValue As ULong)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As ULong, newValue As ULong)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Integer, newValue As Integer)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Integer, newValue As Integer)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UInteger, newValue As UInteger)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UInteger, newValue As UInteger)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Short, newValue As Short)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Short, newValue As Short)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UShort, newValue As UShort)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UShort, newValue As UShort)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-    <Obsolete("Use SetProperty")>
-    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Boolean, newValue As Boolean)
-        If backingFieldValue.Equals(newValue) Then Return
-        OnPropertyChanging(propertyName)
-        backingFieldValue = newValue
-        OnPropertyChanged(propertyName)
-    End Sub
+    '    <Obsolete("Use SetProperty")>
+    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Boolean, newValue As Boolean)
+    '        If backingFieldValue.Equals(newValue) Then Return
+    '        OnPropertyChanging(propertyName)
+    '        backingFieldValue = newValue
+    '        OnPropertyChanged(propertyName)
+    '    End Sub
 
-#End Region
+    '#End Region
 
 #Region "New Lamba SetProperty"
 

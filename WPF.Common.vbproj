@@ -56,6 +56,8 @@
   <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -75,6 +77,7 @@
     <Import Include="System.Windows" />
     <Import Include="System.Windows.Controls" />
     <Import Include="System.Windows.Input" />
+    <Import Include="System.Windows.Interactivity" />
     <Import Include="System.Windows.Markup" />
     <Import Include="System.Windows.Media" />
     <Import Include="System.Windows.Threading" />
@@ -84,6 +87,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Behaviors\DragDropUtils.vb" />
+    <Compile Include="Behaviors\FolderDialogBehavior.vb" />
+    <Compile Include="ViewModels\MainViewModelBase.vb" />
     <Compile Include="ViewModels\PropertyChangingExtendedEventArgs.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
