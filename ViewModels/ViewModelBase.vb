@@ -141,6 +141,10 @@ Public Class ViewModelBase
     Public Event PropertyChanging(sender As Object, e As System.ComponentModel.PropertyChangingEventArgs) Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
     Public Event PropertyChanged(sender As Object, e As System.ComponentModel.PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
 
+    Protected Sub NotifyPropertyChanged(propertyName As String)
+        RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
+    End Sub
+
     '#Region "Obsolete UpdateProperty methods"
 
     '    <Obsolete("Use SetProperty")>
