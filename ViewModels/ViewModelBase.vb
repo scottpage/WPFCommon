@@ -123,11 +123,11 @@ Public Class ViewModelBase
     ''' Call BeginCreate when creating a new instance requires setting properties that call SetProperty (notify).  Remember to call EndCreate when completed.
     ''' </summary>
     Public Sub BeginCreate()
-
+        _Creating = True
     End Sub
 
     Public Sub EndCreate()
-
+        _Creating = False
     End Sub
 
 #End Region
@@ -138,7 +138,7 @@ Public Class ViewModelBase
     Public Event PropertyChanged(sender As Object, e As System.ComponentModel.PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
 
     Protected Sub NotifyPropertyChanged(propertyName As String)
-        If EventsEnabled Or _Creating Then Return
+        If Not EventsEnabled Or _Creating Then Return
         RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
     End Sub
 
@@ -237,7 +237,7 @@ Public Class ViewModelBase
 #Region "New Lamba SetProperty"
 
     Protected Sub SetProperty(Of T)(expression As Expression(Of Func(Of T)), ByRef field As T, value As T)
-        If Not EventsEnabled Or Not _Creating Then Return
+        If Not EventsEnabled Or _Creating Then Return
         If field IsNot Nothing AndAlso field.Equals(value) Then Return
         Dim oldValue = field
         OnPropertyChanging(Me, expression, oldValue, value)
