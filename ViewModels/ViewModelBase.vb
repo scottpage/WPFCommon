@@ -9,6 +9,7 @@ Imports System.ComponentModel
 Public Class ViewModelBase
     Implements INotifyPropertyChanging
     Implements INotifyPropertyChanged
+    Implements IDisposable
 
     Private Shared ReadOnly _ViewModels As New ObservableCollection(Of ViewModelBase)
     Private Shared _AllViewModelsAreShutdown As Boolean = False
@@ -57,21 +58,12 @@ Public Class ViewModelBase
 #Region "Constructors"
 
     Protected Sub New()
-        _CreatorDispatcher = Dispatcher.CurrentDispatcher
+        CreatorDispatcher = Dispatcher.CurrentDispatcher
         AddViewModel(Me)
     End Sub
 
-#End Region
-
-#Region "Properties"
-
-    Private _CreatorDispatcher As Dispatcher
     <XmlIgnore>
     Protected ReadOnly Property CreatorDispatcher As Dispatcher
-        Get
-            Return _CreatorDispatcher
-        End Get
-    End Property
 
     Private _IsShutdown As Boolean
     Public ReadOnly Property IsShutdown As Boolean
@@ -91,16 +83,8 @@ Public Class ViewModelBase
         End Set
     End Property
 
-    Private Shared _EventsEnabled As Boolean = True
     <XmlIgnore>
-    Public Shared Property EventsEnabled As Boolean
-        Get
-            Return _EventsEnabled
-        End Get
-        Set(ByVal Value As Boolean)
-            _EventsEnabled = Value
-        End Set
-    End Property
+    Public Shared Property EventsEnabled As Boolean = True
 
 #End Region
 
@@ -134,6 +118,18 @@ Public Class ViewModelBase
     Protected Overridable Sub OnShutdown()
     End Sub
 
+    Private _Creating As Boolean = False
+    ''' <summary>
+    ''' Call BeginCreate when creating a new instance requires setting properties that call SetProperty (notify).  Remember to call EndCreate when completed.
+    ''' </summary>
+    Public Sub BeginCreate()
+
+    End Sub
+
+    Public Sub EndCreate()
+
+    End Sub
+
 #End Region
 
 #Region "INotifyPropertyChanging and INotifyPropertyChanged"
@@ -142,6 +138,7 @@ Public Class ViewModelBase
     Public Event PropertyChanged(sender As Object, e As System.ComponentModel.PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
 
     Protected Sub NotifyPropertyChanged(propertyName As String)
+        If EventsEnabled Or _Creating Then Return
         RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
     End Sub
 
@@ -240,6 +237,7 @@ Public Class ViewModelBase
 #Region "New Lamba SetProperty"
 
     Protected Sub SetProperty(Of T)(expression As Expression(Of Func(Of T)), ByRef field As T, value As T)
+        If Not EventsEnabled Or Not _Creating Then Return
         If field IsNot Nothing AndAlso field.Equals(value) Then Return
         Dim oldValue = field
         OnPropertyChanging(Me, expression, oldValue, value)
@@ -258,7 +256,7 @@ Public Class ViewModelBase
 
     Protected Overridable Sub OnPropertyChanging(sender As Object, e As PropertyChangingEventArgs)
         If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
-            If EventsEnabled Then RaiseEvent PropertyChanging(Me, e)
+            RaiseEvent PropertyChanging(Me, e)
         Else
             Dim Handler As New PropertyChangingEventHandler(AddressOf OnPropertyChanging)
             CreatorDispatcher.BeginInvoke(Handler, sender, e)
@@ -276,7 +274,7 @@ Public Class ViewModelBase
 
     Public Overridable Sub OnPropertyChanged(sender As Object, e As PropertyChangedEventArgs)
         If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
-            If EventsEnabled Then RaiseEvent PropertyChanged(Me, e)
+            RaiseEvent PropertyChanged(Me, e)
         Else
             Dim Handler As New PropertyChangedEventHandler(AddressOf OnPropertyChanged)
             CreatorDispatcher.BeginInvoke(Handler, sender, e)
@@ -350,6 +348,39 @@ Public Class ViewModelBase
 
 #End If
 
+#End Region
+
+#Region "IDisposable Support"
+    Private disposedValue As Boolean ' To detect redundant calls
+
+    ' IDisposable
+    Protected Overridable Sub Dispose(disposing As Boolean)
+        If Not disposedValue Then
+            If disposing Then
+                RemoveViewModel(Me)
+                ' TODO: dispose managed state (managed objects).
+            End If
+
+            ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
+            ' TODO: set large fields to null.
+        End If
+        disposedValue = True
+    End Sub
+
+    ' TODO: override Finalize() only if Dispose(disposing As Boolean) above has code to free unmanaged resources.
+    'Protected Overrides Sub Finalize()
+    '    ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
+    '    Dispose(False)
+    '    MyBase.Finalize()
+    'End Sub
+
+    ' This code added by Visual Basic to correctly implement the disposable pattern.
+    Public Sub Dispose() Implements IDisposable.Dispose
+        ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
+        Dispose(True)
+        ' TODO: uncomment the following line if Finalize() is overridden above.
+        ' GC.SuppressFinalize(Me)
+    End Sub
 #End Region
 
 End Class
