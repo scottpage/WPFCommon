@@ -239,9 +239,9 @@ Public Class ViewModelBase
     Protected Sub SetProperty(Of T)(expression As Expression(Of Func(Of T)), ByRef field As T, value As T)
         If field IsNot Nothing AndAlso field.Equals(value) Then Return
         Dim oldValue = field
-        If Not EventsEnabled Or _Creating Then OnPropertyChanging(Me, expression, oldValue, value)
+        If EventsEnabled And Not _Creating Then OnPropertyChanging(Me, expression, oldValue, value)
         field = value
-        If Not EventsEnabled Or _Creating Then OnPropertyChanged(Me, expression, oldValue, value)
+        If EventsEnabled And Not _Creating Then OnPropertyChanged(Me, expression, oldValue, value)
     End Sub
 
     Protected Overridable Sub OnPropertyChanging(Of T)(expression As Expression(Of Func(Of T)))
