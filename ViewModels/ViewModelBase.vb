@@ -111,8 +111,8 @@ Public Class ViewModelBase
     End Sub
 
     Private Sub Shutdown()
-        SetProperty(Function() IsShutdown, _IsShutdown, True)
         OnShutdown()
+        SetProperty(Function() IsShutdown, _IsShutdown, True)
     End Sub
 
     Protected Overridable Sub OnShutdown()
