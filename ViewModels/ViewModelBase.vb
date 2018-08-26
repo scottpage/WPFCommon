@@ -43,7 +43,7 @@ Public Class ViewModelBase
     End Sub
 
     Private Shared ReadOnly _ViewModelsLockObj As New Object
-    Private Shared Sub ShutdownViewModels()
+    Public Shared Sub ShutdownViewModels()
         SyncLock _ViewModelsLockObj
             If _AllViewModelsAreShutdown Then Return
             For Each VM In _ViewModels.ToList
@@ -92,7 +92,11 @@ Public Class ViewModelBase
 
     Private Delegate Sub RefreshCommandsSyncHandler()
 
-    Public Overridable Sub Initialize()
+    Public Sub Initialize()
+        OnInitialize()
+    End Sub
+
+    Protected Overridable Sub OnInitialize()
         OnInitialized()
     End Sub
 
@@ -110,7 +114,7 @@ Public Class ViewModelBase
     Public Overridable Sub Reset()
     End Sub
 
-    Private Sub Shutdown()
+    Public Sub Shutdown()
         OnShutdown()
         SetProperty(Function() IsShutdown, _IsShutdown, True)
     End Sub
