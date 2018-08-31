@@ -1,6 +1,5 @@
-﻿Imports System
+﻿Imports MvvmValidation
 Imports System.Collections.ObjectModel
-Imports System.ComponentModel
 
 ''' <summary>
 ''' Base View Model class for implementing MVVM in WPF.
@@ -9,7 +8,11 @@ Imports System.ComponentModel
 Public Class ViewModelBase
     Implements INotifyPropertyChanging
     Implements INotifyPropertyChanged
+    Implements INotifyDataErrorInfo
     Implements IDisposable
+
+    Protected ReadOnly Property Validator As ValidationHelper
+    Private WithEvents _NotifyDataErrorInfoAdapter As NotifyDataErrorInfoAdapter
 
     Private Shared ReadOnly _ViewModels As New ObservableCollection(Of ViewModelBase)
     Private Shared _AllViewModelsAreShutdown As Boolean = False
@@ -346,10 +349,32 @@ Public Class ViewModelBase
 #If DEBUG Then
 
     Private Sub ValidatePropertyName(propertyName As String)
-        If TypeDescriptor.GetProperties(Me).Find(propertyName, False) Is Nothing Then Throw New ArgumentException(String.Format("No property named ""{0}"" exists for the current object", propertyName), propertyName)
+        If TypeDescriptor.GetProperties(Me).Find(propertyName, False) Is Nothing Then
+            Throw New ArgumentException(String.Format("No property named, {0}, exists for the current object, {1}", propertyName, Me.GetType.FullName), propertyName)
+        End If
     End Sub
 
 #End If
+
+#End Region
+
+#Region "INotifyDataErrorInfo and MvvmValidation"
+
+    Public Event ErrorsChanged As EventHandler(Of DataErrorsChangedEventArgs) Implements INotifyDataErrorInfo.ErrorsChanged
+
+    Private Sub _NotifyDataErrorInfoAdapter_ErrorsChanged(sender As Object, e As DataErrorsChangedEventArgs) Handles _NotifyDataErrorInfoAdapter.ErrorsChanged
+        RaiseEvent ErrorsChanged(Me, e)
+    End Sub
+
+    Public ReadOnly Property HasErrors As Boolean Implements INotifyDataErrorInfo.HasErrors
+        Get
+            Return _NotifyDataErrorInfoAdapter.HasErrors
+        End Get
+    End Property
+
+    Public Function GetErrors(propertyName As String) As IEnumerable Implements INotifyDataErrorInfo.GetErrors
+        Return _NotifyDataErrorInfoAdapter.GetErrors(propertyName)
+    End Function
 
 #End Region
 
@@ -384,6 +409,7 @@ Public Class ViewModelBase
         ' TODO: uncomment the following line if Finalize() is overridden above.
         ' GC.SuppressFinalize(Me)
     End Sub
+
 #End Region
 
 End Class
