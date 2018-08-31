@@ -13,8 +13,8 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyTitle("ScottPage.WPF.Common")> 
 <Assembly: AssemblyDescription("Common WPF library.")> 
 <Assembly: AssemblyCompany("Scott Page")> 
-<Assembly: AssemblyProduct("ScottPage.WPF.Common")> 
-<Assembly: AssemblyCopyright("Copyright © Scott Page 2014")> 
+<Assembly: AssemblyProduct("ScottPage.WPF.Common")>
+<Assembly: AssemblyCopyright("Copyright © Scott Page 2018")>
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)> 
