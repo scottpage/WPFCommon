@@ -64,6 +64,7 @@ Public Class ViewModelBase
         CreatorDispatcher = Dispatcher.CurrentDispatcher
         Validator = New ValidationHelper
         _NotifyDataErrorInfoAdapter = New NotifyDataErrorInfoAdapter(Validator)
+        OnAddValidationRules()
         AddViewModel(Me)
     End Sub
 
@@ -381,6 +382,9 @@ Public Class ViewModelBase
     Public Function GetErrors(propertyName As String) As IEnumerable Implements INotifyDataErrorInfo.GetErrors
         Return _NotifyDataErrorInfoAdapter.GetErrors(propertyName)
     End Function
+
+    Protected Overridable Sub OnAddValidationRules()
+    End Sub
 
 #End Region
 
