@@ -62,6 +62,8 @@ Public Class ViewModelBase
 
     Protected Sub New()
         CreatorDispatcher = Dispatcher.CurrentDispatcher
+        Validator = New ValidationHelper
+        _NotifyDataErrorInfoAdapter = New NotifyDataErrorInfoAdapter(Validator)
         AddViewModel(Me)
     End Sub
 
@@ -105,6 +107,10 @@ Public Class ViewModelBase
 
     Protected Overridable Sub OnInitialized()
     End Sub
+
+    Public Function CheckAccess() As Boolean
+        Return CreatorDispatcher.CheckAccess
+    End Function
 
     Public Sub RefreshCommands()
         Dim Handler As New RefreshCommandsSyncHandler(AddressOf RefreshCommandsSync)
