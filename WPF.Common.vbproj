@@ -97,7 +97,8 @@
   <ItemGroup>
     <Compile Include="Behaviors\DragDropUtils.vb" />
     <Compile Include="Behaviors\FolderDialogBehavior.vb" />
-    <Compile Include="Extensions\Extensions.vb" />
+    <Compile Include="Commands\RelayCommandAsync.vb" />
+    <Compile Include="Extensions\ValueTypeExtensions.vb" />
     <Compile Include="UserControls\LabeledTextBoxUserControl.xaml.vb">
       <DependentUpon>LabeledTextBoxUserControl.xaml</DependentUpon>
     </Compile>
