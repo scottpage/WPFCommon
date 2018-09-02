@@ -1,5 +1,6 @@
 ﻿Imports MvvmValidation
 Imports System.Collections.ObjectModel
+Imports System.Reflection
 
 ''' <summary>
 ''' Base View Model class for implementing MVVM in WPF.
@@ -148,105 +149,16 @@ Public Class ViewModelBase
 
 #Region "INotifyPropertyChanging and INotifyPropertyChanged"
 
-    Public Event PropertyChanging(sender As Object, e As System.ComponentModel.PropertyChangingEventArgs) Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
-    Public Event PropertyChanged(sender As Object, e As System.ComponentModel.PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+    Public Event PropertyChanging(sender As Object, e As PropertyChangingEventArgs) Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
+    Public Event PropertyChanged(sender As Object, e As PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
 
     Protected Sub NotifyPropertyChanged(propertyName As String)
         If Not EventsEnabled Or _Creating Then Return
+#If VALIDATEPROPERTYNAMES Then
+        ValidatePropertyName(propertyName)
+#End If
         RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
     End Sub
-
-    '#Region "Obsolete UpdateProperty methods"
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Object, newValue As Object)
-    '        If backingFieldValue IsNot Nothing AndAlso backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As String, newValue As String)
-    '        If Not String.IsNullOrEmpty(backingFieldValue) AndAlso backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Double, newValue As Double)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Single, newValue As Single)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Long, newValue As Long)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As ULong, newValue As ULong)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Integer, newValue As Integer)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UInteger, newValue As UInteger)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Short, newValue As Short)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As UShort, newValue As UShort)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '    <Obsolete("Use SetProperty")>
-    '    Protected Overridable Sub UpdateProperty(propertyName As String, ByRef backingFieldValue As Boolean, newValue As Boolean)
-    '        If backingFieldValue.Equals(newValue) Then Return
-    '        OnPropertyChanging(propertyName)
-    '        backingFieldValue = newValue
-    '        OnPropertyChanged(propertyName)
-    '    End Sub
-
-    '#End Region
 
 #Region "New Lamba SetProperty"
 
@@ -268,7 +180,10 @@ Public Class ViewModelBase
     End Sub
 
     Protected Overridable Sub OnPropertyChanging(sender As Object, e As PropertyChangingEventArgs)
-        If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
+        If Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
+#If VALIDATEPROPERTYNAMES Then
+            ValidatePropertyName(e.PropertyName)
+#End If
             RaiseEvent PropertyChanging(Me, e)
         Else
             Dim Handler As New PropertyChangingEventHandler(AddressOf OnPropertyChanging)
@@ -286,7 +201,10 @@ Public Class ViewModelBase
     End Sub
 
     Public Overridable Sub OnPropertyChanged(sender As Object, e As PropertyChangedEventArgs)
-        If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
+        If Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
+#If VALIDATEPROPERTYNAMES Then
+            ValidatePropertyName(e.PropertyName)
+#End If
             RaiseEvent PropertyChanged(Me, e)
         Else
             Dim Handler As New PropertyChangedEventHandler(AddressOf OnPropertyChanged)
@@ -324,10 +242,8 @@ Public Class ViewModelBase
     Private Delegate Sub PropertyChangeDelegate(propertyName As String)
 
     Private Sub OnPropertyChanging(propertyName As String)
-#If DEBUG Then
 #If VALIDATEPROPERTYNAMES Then
         ValidatePropertyName(propertyName)
-#End If
 #End If
         If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
             If EventsEnabled Then RaiseEvent PropertyChanging(Me, New PropertyChangingEventArgs(propertyName))
@@ -338,10 +254,8 @@ Public Class ViewModelBase
     End Sub
 
     Private Sub OnPropertyChanged(propertyName As String)
-#If DEBUG Then
 #If VALIDATEPROPERTYNAMES Then
         ValidatePropertyName(propertyName)
-#End If
 #End If
         If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
             If EventsEnabled Then RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
@@ -353,12 +267,11 @@ Public Class ViewModelBase
         IsDirty = True
     End Sub
 
-#If DEBUG Then
+#If VALIDATEPROPERTYNAMES Then
 
     Private Sub ValidatePropertyName(propertyName As String)
-        If TypeDescriptor.GetProperties(Me).Find(propertyName, False) Is Nothing Then
-            Throw New ArgumentException(String.Format("No property named, {0}, exists for the current object, {1}", propertyName, Me.GetType.FullName), propertyName)
-        End If
+        If GetType(ViewModelBase).GetProperty(propertyName, BindingFlags.Instance Or BindingFlags.Public Or BindingFlags.FlattenHierarchy) IsNot Nothing Then Return
+        Throw New ArgumentException(String.Format("No property named, {0}, exists for the current object, {1}", propertyName, Me.GetType.FullName), propertyName)
     End Sub
 
 #End If
