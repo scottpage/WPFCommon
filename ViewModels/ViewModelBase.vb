@@ -1,6 +1,7 @@
 ﻿Imports MvvmValidation
 Imports System.Collections.ObjectModel
 Imports System.Reflection
+Imports System.Threading.Tasks
 
 ''' <summary>
 ''' Base View Model class for implementing MVVM in WPF.
@@ -109,7 +110,6 @@ Public Class ViewModelBase
 
     Protected Overridable Sub OnInitialized()
     End Sub
-
     Public Function CheckAccess() As Boolean
         Return CreatorDispatcher.CheckAccess
     End Function
@@ -201,7 +201,7 @@ Public Class ViewModelBase
     End Sub
 
     Public Overridable Sub OnPropertyChanged(sender As Object, e As PropertyChangedEventArgs)
-        If Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
+        If CreatorDispatcher.CheckAccess Then
 #If VALIDATEPROPERTYNAMES Then
             ValidatePropertyName(e.PropertyName)
 #End If
@@ -270,7 +270,8 @@ Public Class ViewModelBase
 #If VALIDATEPROPERTYNAMES Then
 
     Private Sub ValidatePropertyName(propertyName As String)
-        If GetType(ViewModelBase).GetProperty(propertyName, BindingFlags.Instance Or BindingFlags.Public Or BindingFlags.FlattenHierarchy) IsNot Nothing Then Return
+        Dim RequestedPropInfo = Me.GetType.GetProperty(propertyName, BindingFlags.Instance Or BindingFlags.Public Or BindingFlags.FlattenHierarchy Or BindingFlags.GetProperty)
+        If RequestedPropInfo IsNot Nothing Then Return
         Throw New ArgumentException(String.Format("No property named, {0}, exists for the current object, {1}", propertyName, Me.GetType.FullName), propertyName)
     End Sub
 
