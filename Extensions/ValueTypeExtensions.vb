@@ -16,11 +16,6 @@
     End Function
 
     <Extension>
-    Public Function ToInt32(value As String) As Integer
-        Return Convert.ToInt32(value)
-    End Function
-
-    <Extension>
     Public Function ToInt32(value As Decimal) As Integer
         Return Convert.ToInt32(value)
     End Function
@@ -32,6 +27,16 @@
 
     <Extension>
     Public Function ToInt32(value As Double) As Integer
+        Return Convert.ToInt32(value)
+    End Function
+
+    <Extension>
+    Public Function ToInt32(value As String) As Integer
+        Return Convert.ToInt32(value)
+    End Function
+
+    <Extension>
+    Public Function ToInt32(value As Object) As Integer
         Return Convert.ToInt32(value)
     End Function
 
