@@ -13,6 +13,7 @@
     Protected Sub New()
         MyBase.New
         If _Instance IsNot Nothing Then Throw New InvalidOperationException("The MainViewModelBase class can only be inherited once per application.")
+        CreatorDispatcher = Dispatcher.CurrentDispatcher
     End Sub
 
 End Class

@@ -10,73 +10,46 @@ Imports System.Threading.Tasks
 Public Class ViewModelBase
     Implements INotifyPropertyChanging
     Implements INotifyPropertyChanged
-    Implements INotifyDataErrorInfo
     Implements IDisposable
 
-    Protected ReadOnly Property Validator As ValidationHelper
-    Private WithEvents _NotifyDataErrorInfoAdapter As NotifyDataErrorInfoAdapter
+    Protected Sub New()
+    End Sub
 
-    Private Shared ReadOnly _ViewModels As New ObservableCollection(Of ViewModelBase)
-    Private Shared _AllViewModelsAreShutdown As Boolean = False
-
+    <XmlIgnore>
     Public ReadOnly Property ApplicationTitle As String
         Get
             Return My.Application.Info.Title
         End Get
     End Property
 
-    Public Shared ReadOnly Property ViewModels As IEnumerable(Of ViewModelBase)
+    <XmlIgnore>
+    Private Shared _CreatorDispatcher As Dispatcher = Nothing
+    Public Shared Property CreatorDispatcher As Dispatcher
         Get
-            Return _ViewModels.AsEnumerable
+            Return _CreatorDispatcher
+        End Get
+        Set(value As Dispatcher)
+            If _CreatorDispatcher IsNot Nothing Then
+                Throw New InvalidOperationException("The CreatorDispatcher can only be set once per application instance.")
+            End If
+            _CreatorDispatcher = value
+        End Set
+    End Property
+
+    <XmlIgnore>
+    Public Property IsEventsEnabled As Boolean = True
+
+    Private _IsInitializing As Boolean
+    Public ReadOnly Property IsInitializing As Boolean
+        Get
+            Return _IsInitializing
         End Get
     End Property
 
-    Private Shared Sub AddViewModel(vm As ViewModelBase)
-        If _AllViewModelsAreShutdown Then
-            Throw New InvalidOperationException("The view models are shutdown and can no longer be used.")
-            Return
-        End If
-        SyncLock _ViewModelsLockObj
-            _ViewModels.Add(vm)
-        End SyncLock
-    End Sub
-
-    Private Shared Sub RemoveViewModel(vm As ViewModelBase)
-        SyncLock _ViewModelsLockObj
-            _ViewModels.Remove(vm)
-        End SyncLock
-    End Sub
-
-    Private Shared ReadOnly _ViewModelsLockObj As New Object
-    Public Shared Sub ShutdownViewModels()
-        SyncLock _ViewModelsLockObj
-            If _AllViewModelsAreShutdown Then Return
-            For Each VM In _ViewModels.ToList
-                VM.Shutdown()
-                _ViewModels.Remove(VM)
-            Next
-            _ViewModels.Clear()
-            _AllViewModelsAreShutdown = True
-        End SyncLock
-    End Sub
-
-#Region "Constructors"
-
-    Protected Sub New()
-        CreatorDispatcher = Dispatcher.CurrentDispatcher
-        Validator = New ValidationHelper
-        _NotifyDataErrorInfoAdapter = New NotifyDataErrorInfoAdapter(Validator)
-        OnAddValidationRules()
-        AddViewModel(Me)
-    End Sub
-
-    <XmlIgnore>
-    Protected ReadOnly Property CreatorDispatcher As Dispatcher
-
-    Private _IsShutdown As Boolean
-    Public ReadOnly Property IsShutdown As Boolean
+    Private _IsInitialized As Boolean
+    Public ReadOnly Property IsInitialized As Boolean
         Get
-            Return _IsShutdown
+            Return _IsInitialized
         End Get
     End Property
 
@@ -91,109 +64,69 @@ Public Class ViewModelBase
         End Set
     End Property
 
-    <XmlIgnore>
-    Public Shared Property EventsEnabled As Boolean = True
+    Public Async Function Initialize(Of T)(options As T) As Task
+        If CreatorDispatcher Is Nothing Then Throw New InvalidOperationException("ViewModelBase.CreatorDispatcher must be set before initializing.")
+        SetProperty(Function() IsInitializing, _IsInitializing, True)
+        IsEventsEnabled = False
+        Await OnInitialize(options)
+        Await OnInitialized()
+        IsDirty = False
+        IsEventsEnabled = True
+        SetProperty(Function() IsInitializing, _IsInitializing, False)
+        SetProperty(Function() IsInitialized, _IsInitialized, True)
+    End Function
 
-#End Region
+    Protected Overridable Async Function OnInitialize(Of T)(options As T) As Task
+        Await Task.CompletedTask
+    End Function
 
-#Region "Methods"
+    Protected Overridable Async Function OnInitialized() As Task
+        Await Task.CompletedTask
+    End Function
 
-    Private Delegate Sub RefreshCommandsSyncHandler()
-
-    Public Sub Initialize()
-        OnInitialize()
-    End Sub
-
-    Protected Overridable Sub OnInitialize()
-        OnInitialized()
-    End Sub
-
-    Protected Overridable Sub OnInitialized()
-    End Sub
     Public Function CheckAccess() As Boolean
         Return CreatorDispatcher.CheckAccess
     End Function
 
-    Public Sub RefreshCommands()
-        Dim Handler As New RefreshCommandsSyncHandler(AddressOf RefreshCommandsSync)
-        CreatorDispatcher.Invoke(Handler)
-    End Sub
+#Region "INotifyPropertyChanging"
 
-    Protected Overridable Sub RefreshCommandsSync()
-    End Sub
-
-    Public Overridable Sub Reset()
-    End Sub
-
-    Public Sub Shutdown()
-        OnShutdown()
-        SetProperty(Function() IsShutdown, _IsShutdown, True)
-    End Sub
-
-    Protected Overridable Sub OnShutdown()
-    End Sub
-
-    Private _Creating As Boolean = False
-    ''' <summary>
-    ''' Call BeginCreate when creating a new instance requires setting properties that call SetProperty (notify).  Remember to call EndCreate when completed.
-    ''' </summary>
-    Public Sub BeginCreate()
-        _Creating = True
-    End Sub
-
-    Public Sub EndCreate()
-        _Creating = False
-    End Sub
-
-#End Region
-
-#Region "INotifyPropertyChanging and INotifyPropertyChanged"
-
-    Public Event PropertyChanging(sender As Object, e As PropertyChangingEventArgs) Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
-    Public Event PropertyChanged(sender As Object, e As PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
-
-    Protected Sub NotifyPropertyChanged(propertyName As String)
-        If Not EventsEnabled Or _Creating Then Return
-#If VALIDATEPROPERTYNAMES Then
-        ValidatePropertyName(propertyName)
-#End If
-        RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
-    End Sub
-
-#Region "New Lamba SetProperty"
-
-    Protected Sub SetProperty(Of T)(expression As Expression(Of Func(Of T)), ByRef field As T, value As T)
-        If field IsNot Nothing AndAlso field.Equals(value) Then Return
-        Dim oldValue = field
-        If EventsEnabled And Not _Creating Then OnPropertyChanging(Me, expression, oldValue, value)
-        field = value
-        If EventsEnabled And Not _Creating Then OnPropertyChanged(Me, expression, oldValue, value)
-    End Sub
+    Public Event PropertyChanging(sender As Object, e As PropertyChangingEventArgs) Implements INotifyPropertyChanging.PropertyChanging
 
     Protected Overridable Sub OnPropertyChanging(Of T)(expression As Expression(Of Func(Of T)))
         Dim PropertyName = GetPropertyName(expression)
         OnPropertyChanging(PropertyName)
     End Sub
 
+    Private Sub OnPropertyChanging(propertyName As String)
+        If IsEventsEnabled Then OnPropertyChanging(Me, New PropertyChangingEventArgs(propertyName))
+    End Sub
+
     Protected Overridable Sub OnPropertyChanging(Of T)(sender As Object, expression As Expression(Of Func(Of T)), oldValue As T, newValue As T)
         OnPropertyChanging(Me, New PropertyChangingExtendedEventArgs(Of T)(GetPropertyName(expression), oldValue, newValue))
     End Sub
 
-    Protected Overridable Sub OnPropertyChanging(sender As Object, e As PropertyChangingEventArgs)
-        If Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
-#If VALIDATEPROPERTYNAMES Then
+    Public Overridable Sub OnPropertyChanging(sender As Object, e As PropertyChangingEventArgs)
+        If CheckAccess() Then
             ValidatePropertyName(e.PropertyName)
-#End If
             RaiseEvent PropertyChanging(Me, e)
         Else
-            Dim Handler As New PropertyChangingEventHandler(AddressOf OnPropertyChanging)
-            CreatorDispatcher.BeginInvoke(Handler, sender, e)
+            CreatorDispatcher.BeginInvoke(New Action(Of Object, PropertyChangingEventArgs)(AddressOf OnPropertyChanging), sender, e)
         End If
     End Sub
+
+#End Region
+
+#Region "INotifyPropertyChanged"
+
+    Public Event PropertyChanged(sender As Object, e As PropertyChangedEventArgs) Implements INotifyPropertyChanged.PropertyChanged
 
     Protected Overridable Sub OnPropertyChanged(Of T)(expression As Expression(Of Func(Of T)))
         Dim PropertyName = GetPropertyName(expression)
         OnPropertyChanged(PropertyName)
+    End Sub
+
+    Private Sub OnPropertyChanged(propertyName As String)
+        If IsEventsEnabled Then OnPropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
     End Sub
 
     Protected Overridable Sub OnPropertyChanged(Of T)(sender As Object, expression As Expression(Of Func(Of T)), oldValue As T, newValue As T)
@@ -201,106 +134,44 @@ Public Class ViewModelBase
     End Sub
 
     Public Overridable Sub OnPropertyChanged(sender As Object, e As PropertyChangedEventArgs)
-        If CreatorDispatcher.CheckAccess Then
-#If VALIDATEPROPERTYNAMES Then
+        If CheckAccess() Then
             ValidatePropertyName(e.PropertyName)
-#End If
             RaiseEvent PropertyChanged(Me, e)
         Else
-            Dim Handler As New PropertyChangedEventHandler(AddressOf OnPropertyChanged)
-            CreatorDispatcher.BeginInvoke(Handler, sender, e)
+            CreatorDispatcher.BeginInvoke(New Action(Of Object, PropertyChangedEventArgs)(AddressOf OnPropertyChanged), sender, e)
         End If
-    End Sub
-
-    Protected Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
-        If expression Is Nothing Then
-            Throw New ArgumentNullException("expression")
-        End If
-
-        Dim body = expression.Body
-        Dim memberExpression As MemberExpression = TryCast(body, MemberExpression)
-        If memberExpression Is Nothing Then
-            memberExpression = DirectCast(DirectCast(body, UnaryExpression).Operand, MemberExpression)
-        End If
-        Return memberExpression.Member.Name
-    End Function
-
-    'Original version, see more robust revision above.
-    'Protected Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
-    '    Dim memberExp = DirectCast(expression.Body, MemberExpression)
-    '    Return memberExp.Member.Name
-    'End Function
-
-    Protected Sub OnPropertyChangingAndChanged(Of T)(expression As Expression(Of Func(Of T)))
-        Dim PropertyName = GetPropertyName(expression)
-        OnPropertyChanging(PropertyName)
-        OnPropertyChanged(PropertyName)
     End Sub
 
 #End Region
 
-    Private Delegate Sub PropertyChangeDelegate(propertyName As String)
+#Region "SetProperty"
 
-    Private Sub OnPropertyChanging(propertyName As String)
-#If VALIDATEPROPERTYNAMES Then
-        ValidatePropertyName(propertyName)
-#End If
-        If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
-            If EventsEnabled Then RaiseEvent PropertyChanging(Me, New PropertyChangingEventArgs(propertyName))
-        Else
-            Dim Handler As New PropertyChangeDelegate(AddressOf OnPropertyChanging)
-            CreatorDispatcher.BeginInvoke(Handler, propertyName)
-        End If
+    Protected Sub SetProperty(Of T)(expression As Expression(Of Func(Of T)), ByRef backingField As T, newValue As T)
+        If (backingField Is Nothing And newValue Is Nothing) OrElse (backingField IsNot Nothing AndAlso backingField.Equals(newValue)) Then Return
+        Dim OldBackingFieldValue = backingField
+        If IsEventsEnabled Then OnPropertyChanging(Me, expression, OldBackingFieldValue, newValue)
+        backingField = newValue
+        If IsEventsEnabled Then OnPropertyChanged(Me, expression, OldBackingFieldValue, newValue)
     End Sub
 
-    Private Sub OnPropertyChanged(propertyName As String)
-#If VALIDATEPROPERTYNAMES Then
-        ValidatePropertyName(propertyName)
-#End If
-        If System.Windows.Threading.Dispatcher.CurrentDispatcher Is CreatorDispatcher Then
-            If EventsEnabled Then RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs(propertyName))
-        Else
-            Dim Handler As New PropertyChangeDelegate(AddressOf OnPropertyChanged)
-            CreatorDispatcher.BeginInvoke(Handler, propertyName)
-        End If
+    Protected Function GetPropertyName(Of T)(expression As Expression(Of Func(Of T))) As String
+        If expression Is Nothing Then Throw New ArgumentNullException("expression")
+        Dim body = expression.Body
+        Dim memberExpression As MemberExpression = TryCast(body, MemberExpression)
+        If memberExpression Is Nothing Then memberExpression = DirectCast(DirectCast(body, UnaryExpression).Operand, MemberExpression)
+        Return memberExpression.Member.Name
+    End Function
 
-        IsDirty = True
-    End Sub
-
-#If VALIDATEPROPERTYNAMES Then
+#End Region
 
     Private Sub ValidatePropertyName(propertyName As String)
+#If Not DEBUG Then
+        Return  
+#End If
         Dim RequestedPropInfo = Me.GetType.GetProperty(propertyName, BindingFlags.Instance Or BindingFlags.Public Or BindingFlags.FlattenHierarchy Or BindingFlags.GetProperty)
         If RequestedPropInfo IsNot Nothing Then Return
         Throw New ArgumentException(String.Format("No property named, {0}, exists for the current object, {1}", propertyName, Me.GetType.FullName), propertyName)
     End Sub
-
-#End If
-
-#End Region
-
-#Region "INotifyDataErrorInfo and MvvmValidation"
-
-    Public Event ErrorsChanged As EventHandler(Of DataErrorsChangedEventArgs) Implements INotifyDataErrorInfo.ErrorsChanged
-
-    Private Sub _NotifyDataErrorInfoAdapter_ErrorsChanged(sender As Object, e As DataErrorsChangedEventArgs) Handles _NotifyDataErrorInfoAdapter.ErrorsChanged
-        RaiseEvent ErrorsChanged(Me, e)
-    End Sub
-
-    Public ReadOnly Property HasErrors As Boolean Implements INotifyDataErrorInfo.HasErrors
-        Get
-            Return _NotifyDataErrorInfoAdapter.HasErrors
-        End Get
-    End Property
-
-    Public Function GetErrors(propertyName As String) As IEnumerable Implements INotifyDataErrorInfo.GetErrors
-        Return _NotifyDataErrorInfoAdapter.GetErrors(propertyName)
-    End Function
-
-    Protected Overridable Sub OnAddValidationRules()
-    End Sub
-
-#End Region
 
 #Region "IDisposable Support"
     Private disposedValue As Boolean ' To detect redundant calls
@@ -309,7 +180,6 @@ Public Class ViewModelBase
     Protected Overridable Sub Dispose(disposing As Boolean)
         If Not disposedValue Then
             If disposing Then
-                RemoveViewModel(Me)
                 ' TODO: dispose managed state (managed objects).
             End If
 
